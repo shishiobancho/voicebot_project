@@ -1,0 +1,7 @@
+pygame
+requests
+psutil
+openai
+python-dotenv
+SpeechRecognition
+pyaudio
