@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>字幕</title>
+  <link rel="stylesheet" href="subtitle.css">
+  <style>
+    body {
+      background: transparent;
+      color: white;
+      font-size: 36px;
+      font-family: "けいふぉんと", sans-serif;
+    }
+    #user { color: cyan; }
+    #character { color: yellow; }
+  </style>
+</head>
+<body>
+  <div id="user"></div>
+  <div id="character"></div>
+
+  <script>
+    async function fetchSubtitle() {
+      try {
+        const response = await fetch("subtitle.json?ts=" + Date.now()); // キャッシュ防止
+        const data = await response.json();
+        document.getElementById("user").innerHTML = data.user || "";
+        document.getElementById("character").innerHTML = data.character || "";
+      } catch (e) {
+        console.error("字幕読み込み失敗", e);
+      }
+    }
+
+    setInterval(fetchSubtitle, 500); // 0.5秒ごとに更新
+  </script>
+</body>
+</html>

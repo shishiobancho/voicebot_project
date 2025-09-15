@@ -9,8 +9,12 @@ from core.conversation import chat_with_gpt
 from core.character import (
     get_default_character,
     get_character_info,
-    get_character_by_alias
+    get_character_by_alias,
+    should_change_character,
+    detect_character,
+    character_config
 )
+from subtitlemanager import save_user_subtitle, save_character_subtitle, start_clear_timer
 
 # 初期化
 load_dotenv()
@@ -23,6 +27,9 @@ start_voicevox_engine(
     os.getenv("VOICEVOX_URL")
 )
 
+# 終了ワード
+EXIT_WORDS = ["終了", "終わり", "おしまい", "バイバイ", "さよなら"]
+
 # メインループ
 while True:
     print("========== 新しいループ ==========")
@@ -33,42 +40,32 @@ while True:
         continue
 
     print(f"{os.getenv('USER_NAME', 'あなた')}: {user_input}")
-
-    if user_input in ["終了", "exit", "quit", "おしまい", "バイバイ"]:
-        # GPTに終了メッセージを生成させる
-        farewell_text = chat_with_gpt(
-            "終了の挨拶を一言お願いします。",
-            current_character,
-            get_character_info(current_character)
-        )
-        print(f"{current_character}: {farewell_text}")
-
-        wav_path = synthesize_speech(
-            text=farewell_text,
-            speaker_id=get_character_info(current_character)["id"],
-            speed=get_character_info(current_character)["speed"]
-        )
-        if wav_path:
-            play_audio(wav_path)
-
-        break
+    save_user_subtitle(user_input)
 
     # キャラ切り替え判定
-    alias = get_character_by_alias(user_input)
-    if alias and alias != current_character:
+    alias = detect_character(user_input)
+    if should_change_character(user_input, alias) and alias != current_character:
         current_character = alias
         print(f"[DEBUG] キャラを「{current_character}」に変更しました")
-        continue
 
     # 応答生成
-    reply_text = chat_with_gpt(user_input, current_character, get_character_info(current_character))
+    character_info = get_character_info(current_character)
+    reply_text = chat_with_gpt(user_input, current_character, character_info)
     print(f"{current_character}: {reply_text}")
+    save_character_subtitle(current_character, reply_text, character_info)
 
     # 音声合成・再生
-    character_info = get_character_info(current_character)
-    wav_path = synthesize_speech(
-        text=reply_text,
-        speaker_id=character_info["id"],      # ← IDを渡す
-        speed=character_info["speed"]          # ← 話速も反映
-            ) 
-    play_audio(wav_path)
+    speaker_id = character_info.get("id")
+    speed = character_info.get("speed", 1.0)
+    wav_path = synthesize_speech(reply_text, speaker_id, speed)
+
+    if wav_path:
+        play_audio(wav_path)
+        # 再生完了後に字幕クリアのタイマー開始
+        start_clear_timer()
+    else:
+        print("[エラー] 音声ファイルが生成されませんでした")
+
+    # 終了判定（応答後に終了）
+    if any(word in user_input for word in EXIT_WORDS):
+        break

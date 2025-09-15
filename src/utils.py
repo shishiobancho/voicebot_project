@@ -13,3 +13,4 @@ def load_env():
 def load_character_config(path="./config/character_config.json"):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
+
