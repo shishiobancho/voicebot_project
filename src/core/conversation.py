@@ -1,60 +1,54 @@
 import os
+import json
 from openai import OpenAI
-from dotenv import load_dotenv
+from src.utils import load_env # type: ignore
+from src.core.prompt_loader import load_prompt  # type: ignore # ← 今回作る load_prompt をここから呼ぶ想定
 
-#load_dotenv()
-#client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-# config/.env を明示的にロード
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", "..", "config", ".env"))
-
-api_key = os.getenv("OPENAI_API_KEY")
+# 環境変数読み込み
+env = load_env()
+api_key = env.get("openai_api_key")
 if not api_key:
     raise RuntimeError("OPENAI_API_KEY が読み込めませんでした")
 
-client = OpenAI(api_key=api_key)  # ← これ必須
+client = OpenAI(api_key=api_key)
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-5")
 
-
-
-OPENAI_MODEL = os.getenv("OPENAI_MODEL")
-
-# 履歴保存（最大5往復＝10件）
-MAX_HISTORY = 5
+# 会話履歴管理
+MAX_HISTORY = 5  # 5往復ぶん保持
 conversation_history = []
 
-# キャラプロンプトを付加
-def build_prompt(character_name, character_info):
-    style = character_info.get("prompt", "")
-    return {
-        "role": "system",
-        "content": f"{character_name}として振る舞ってください。{style}"
-    }
-
-# 会話履歴に追加（古い履歴は削除）
 def append_message(role, content):
+    """
+    会話履歴に追加し、最大長を超えたら古いものを削除
+    """
     global conversation_history
     conversation_history.append({"role": role, "content": content})
     if len(conversation_history) > MAX_HISTORY * 2:
         conversation_history = conversation_history[-MAX_HISTORY * 2:]
 
-# GPTと対話
-def chat_with_gpt(user_input, character_name, character_info):
-    system_prompt = build_prompt(character_name, character_info)
 
-    # 履歴にユーザー発話を追加
+def chat_with_gpt(user_input, character_name):
+    """
+    ChatGPT に問い合わせて応答を返す
+    - user_input: ユーザー発話
+    - character_name: 現在のキャラ名
+    - character_info: キャラ設定情報（character_config.jsonから）
+    """
+    # 共通＋キャラ専用プロンプトをロード
+    system_prompt = load_prompt(character_name)
+    system_prompt_msg = {"role": "system", "content": system_prompt}
+
+    # 履歴に追加
     append_message("user", user_input)
-
-    # OpenAIに投げるメッセージ構成
-    messages = [system_prompt] + conversation_history
+    messages = [system_prompt_msg] + conversation_history
 
     try:
         response = client.chat.completions.create(
             model=OPENAI_MODEL,
             messages=messages,
-            temperature=0.7
+            temperature=0.7,
         )
         reply = response.choices[0].message.content
-        # アシスタントの返答も履歴に追加
         append_message("assistant", reply)
         return reply
     except Exception as e:

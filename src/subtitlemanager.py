@@ -21,16 +21,17 @@ def _write_json():
 
 def save_user_subtitle(text: str):
     """ユーザー発話時：字幕をリセットしてユーザー行のみ表示"""
-    global _current_user, _current_character
+    global _current_user
+    clear_subtitles()
     _cancel_timer()
     _current_user = f"<span class='user'>{text}</span>"
-    _current_character = None  # キャラ行を消す
     _write_json()
 
-def save_character_subtitle(character: str, text: str, color: str = "white"):
-    """キャラ発話時：キャラ行を追加、ユーザー行は残す"""
+def save_character_subtitle(text: str, color: str = "white"):
+    """キャラ発話時：字幕をリセットして表示"""
     global _current_character
-    _current_character = f"<span style='color:{color}'>{character}: {text}</span>"
+    clear_subtitles()
+    _current_character = f"<span class='character' style='color:{color}'>{text}</span>"
     _write_json()
 
 def _start_timer():

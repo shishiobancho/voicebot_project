@@ -52,6 +52,15 @@ def detect_character(text: str):
                 return name
     return None
 
+def get_character_id_by_name(name: str, model_cache: dict) -> str | None:
+    """キャラ名やエイリアスからVTSのmodelIDを返す"""
+    conf = character_config.get(name)
+    if not conf:
+        return None
+    model_name = conf.get("modelName")
+    return model_cache.get(model_name)
+
+
 
 def should_change_character(user_input: str, detected_character: str) -> bool:
     """交代ワードが含まれていて、かつキャラが検出されていれば True"""

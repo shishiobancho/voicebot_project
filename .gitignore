@@ -1,6 +1,7 @@
 # VOICEBOT プロジェクト専用
 config/.env
 audio/*.wav
+config/authToken.json
 
 # Python bytecode
 __pycache__/
