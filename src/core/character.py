@@ -2,13 +2,14 @@ import os
 import json
 import re
 from dotenv import load_dotenv
+from src.utils import load_keywords
 
 load_dotenv()
 
 # 設定ファイルのパス
 CHARACTER_CONFIG_PATH = os.path.join("config", "character_config.json")
 
-CHANGE_WORDS = ["代わって", "変わって", "と交代して"]
+CHANGE_WORDS = load_keywords("CHANGE_KEYWORDS")
 
 # キャラ設定ファイルを読み込む
 def load_character_config():
@@ -67,7 +68,5 @@ def should_change_character(user_input: str, detected_character: str) -> bool:
     if not detected_character:
         return False
 
-    change_words = ["代わって", "変わって", "交代して"]
-
-    return any(word in user_input for word in change_words)
+    return any(word in user_input for word in CHANGE_WORDS)
 

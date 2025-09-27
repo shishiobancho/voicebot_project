@@ -15,11 +15,7 @@ from src.core.character import ( # pyright: ignore[reportMissingImports]
 from src.subtitlemanager import save_user_subtitle, save_character_subtitle
 from src.core.vtsapi import VTSAPI
 from src.core.character import get_character_id_by_name  # 仮の関数、キャラ名→modelID対応
-from src.utils import split_text_simple, load_env
-from src.core.prompt_loader import load_prompt
-
-# 終了ワード
-EXIT_WORDS = ["終了", "終わり", "おしまい", "バイバイ", "さよなら"]
+from src.utils import split_text_simple, load_env, load_keywords
 
 # 初期化
 env = load_env()
@@ -51,7 +47,12 @@ vts.cache_models()
 model_id = get_character_id_by_name(current_character, vts.model_cache)
 vts.load_model(model_id, wait_response=False)
 
-first_turn = True
+# キーわード取り出し
+EXIT_WORDS = load_keywords("EXIT_KEYWORDS")
+MUTE_WORDS = load_keywords("MUTE_KEYWORDS")
+UNMUTE_WORDS = load_keywords("UNMUTE_KEYWORDS")
+
+bot_enabled = True  # True=通常、False=ミュート
 
 # メインループ
 while True:
@@ -63,6 +64,25 @@ while True:
 
     print(f"{os.getenv('USER_NAME', 'あなた')}: {user_input}")
     save_user_subtitle(user_input)
+
+    # ミュート制御
+    if any(word in user_input for word in MUTE_WORDS):
+        bot_enabled = False
+        print("[BOT] ミュート中…")
+        continue
+
+    if any(word in user_input for word in UNMUTE_WORDS):
+        bot_enabled = True
+        print("[BOT] ミュート解除")
+        continue
+
+    # ミュート中は応答しないで字幕だけ残す
+    if not bot_enabled:
+        # ミュート中の終了判定（応答せずに終了）
+        if any(word in user_input for word in EXIT_WORDS):
+            print("[BOT] 無言で終了します")
+            break
+        continue
 
     # キャラ切り替え
     alias = detect_character(user_input)

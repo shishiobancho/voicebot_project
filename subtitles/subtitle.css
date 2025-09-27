@@ -6,16 +6,33 @@ body {
 }
 
 .user {
-  color: #00ffff; /* 水色: ユーザー */
-  font-family: "けいふぉんと", "Meiryo", sans-serif; /* フォント */
-  font-size: 32px;
+  font-family: "けいふぉんと", "Meiryo", sans-serif;
+  color: #ffffff;
+  font-size: 48px;
   font-weight: bold;
-  text-shadow: 2px 2px 4px black; /* 見やすいように影つける */
+  text-shadow:
+    -3px -3px 0 #000,
+    3px -3px 0 #000,
+    -3px  3px 0 #000,
+    3px  3px 0 #000,
+    -3px  0   0 #000,
+    3px  0   0 #000,
+    0  -3px 0 #000,
+    0   3px 0 #000;
 }
 
 .character {
-  color: #ffffff; /* 白: キャラ（JSONで上書きされる場合あり） */
-  font-size: 32px;
+  font-family: "けいふぉんと", "Meiryo", sans-serif;
+  color: #00ff66; /* ←必須 */
+  font-size: 48px;
   font-weight: bold;
-  text-shadow: 2px 2px 4px black;
+  text-shadow:
+    -3px -3px 0 #000,
+    3px -3px 0 #000,
+    -3px  3px 0 #000,
+    3px  3px 0 #000,
+    -3px  0   0 #000,
+    3px  0   0 #000,
+    0  -3px 0 #000,
+    0   3px 0 #000;
 }

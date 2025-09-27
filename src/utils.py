@@ -16,6 +16,10 @@ def load_env():
         "common_prompt": os.getenv("COMMON_PROMPT", "common.txt"),
     }
 
+def load_keywords(key: str) -> list[str]:
+    words = os.getenv(key, "")
+    return [w.strip() for w in words.split(",") if w.strip()]
+
 def load_character_config(path="./config/character_config.json"):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
